@@ -1,0 +1,8 @@
+version: "3.8"
+services:
+  h2:
+    image: oscarfonts/h2
+    container_name: h2-db
+    ports:
+      - "8082:8082"
+      - "9092:9092"
