@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: GATEWAY-SERVICE
+  cloud:
+    gateway:
+      routes:
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order/**
+          filters:
+            - AuthenticationFilter
+          # filters:
+          #   - name: CircuitBreaker
+          #     args:
+          #       name: order-service
+          #       fallbackUri: forward:/orderFallBack
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payment/**
+          filters:
+            - AuthenticationFilter
+          # filters:
+          #   - name: CircuitBreaker
+          #     args:
+          #       name: payment-service
+          #       fallbackUri: forward:/paymentFallBack
+        - id: security-service
+          uri: lb://SECURITY-SERVICE
+          predicates:
+            - Path=/auth/**
+          # filters:
+          #   - name: CircuitBreaker
+          #     args:
+          #       name: payment-service
+          #       fallbackUri: forward:/paymentFallBack
+
+server:
+  port: 8989
+
+#Expose all actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
