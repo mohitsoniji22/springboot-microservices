@@ -1,5 +1,6 @@
 package com.example.os.api.service;
 
+import lombok.extern.slf4j.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import com.example.os.api.repository.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Slf4j
 @Service
 @RefreshScope
 public class OrderService {
@@ -30,8 +32,6 @@ public class OrderService {
 
     @Value("${microservices.payment-service.endpoints.endpoint.url}")
     private String ENDPOINT_URL;
-
-    private Logger log = LoggerFactory.getLogger(OrderService.class);
 
     public TransactionResponse saveOrder(TransactionRequest request) throws JsonProcessingException {
         String response = "";

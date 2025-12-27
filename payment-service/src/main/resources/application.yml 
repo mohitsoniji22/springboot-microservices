@@ -1,0 +1,13 @@
+server:
+    port: 9191
+
+spring:
+    h2:
+        console:
+            enabled: true
+    application:
+        name: PAYMENT-SERVICE
+
+logging:
+    file:
+        name: C:/Users/dharani.chrinta/Developer/Personal/springboot-microservices/logs/microservices.log
