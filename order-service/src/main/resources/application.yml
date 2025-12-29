@@ -1,52 +1,62 @@
+# ===================================================
+# COMMON CONFIG (applies to all profiles)
+# ===================================================
+spring:
+  application:
+    name: order-service
+
 server:
   port: 9192
 
+# ===================================================
+# DEFAULT / PROD PROFILE
+# ===================================================
+---
 spring:
+  config:
+    activate:
+      on-profile: default
+
+  cloud:
+    config:
+      uri: http://localhost:9196
+
+# ===================================================
+# TEST PROFILE
+# ===================================================
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  cloud:
+    config:
+      enabled: false
+      #import-check:
+      #  enabled: false
+
   datasource:
-    url: jdbc:h2:tcp://localhost:9092/~/test
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
-    password: Abc@010101
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
   h2:
     console:
       enabled: true
-  application:
-    name: ORDER-SERVICE
 
-management:
-  health:
-    circuitbreakers:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: always
-
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      userService:
-        registerHealthIndicator: true
-        eventConsumerBufferSize: 10
-        failureRateThreshold: 50
-        minimumNumberOfCalls: 5
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-        waitDurationInOpenState: 5s
-        permittedNumberOfCallsInHalfOpenState: 3
-        slidingWindowSize: 10
-        slidingWindowType: COUNT_BASED
-
-
-  retry:
-    instances:
-      userService:
-        maxRetryAttempts: 5
-        waitDuration: 10s
-
-logging:
-  file:
-    name: /Users/mohit_soni/Practice/personal/springboot-microservices/logs/microservices.log
+# external service dummy values (NOT under spring)
+microservices:
+  payment-service:
+    endpoints:
+      endpoint:
+        url: http://localhost:9191/payments
