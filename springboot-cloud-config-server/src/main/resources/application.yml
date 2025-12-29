@@ -5,7 +5,9 @@ spring:
         config:
             server:
                 git:
-                    uri: https://github.com/DharaniDJ/springboot-cloud-config-server
+                    uri: https://github.com/your-org/config-repo
+                    default-label: main
+                    clone-on-start: true
 
 server:
     port: 9196
@@ -13,8 +15,8 @@ server:
 eureka:
     client:
         serviceUrl:
-            defaultZone: http://localhost:8761/eureka/
+            defaultZone: http://service-registry:8761/eureka/
         register-with-eureka: true
         fetch-registry: true
     instance:
-        hostname: localhost
+        prefer-ip-address: true
