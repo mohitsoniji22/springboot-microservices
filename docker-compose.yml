@@ -37,6 +37,8 @@ services:
     container_name: config-server
     ports:
       - "9196:9196"
+    environment:
+      EUREKA_URL: http://service-registry:8761/eureka/
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9196/actuator/health" ]
       interval: 10s
