@@ -13,6 +13,9 @@ import com.example.security_service.dto.RefreshTokenRequest;
 import com.example.security_service.entity.RefreshToken;
 import com.example.security_service.entity.User;
 import com.example.security_service.repository.UserRepository;
+
+import java.util.*;
+
 @Service
 public class AuthService {
 
@@ -32,9 +35,11 @@ public class AuthService {
     private AuthenticationManager authenticationManager;
 
     public String saveUser(User user) {
+        Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
+        User userNew = existingUser.orElse(user);
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        userNew.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(userNew);
         return "User saved successfully";
     }
 

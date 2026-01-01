@@ -21,16 +21,19 @@ public class PaymentService {
     @Autowired
     private PaymentRepository repository;
 
+    private static final Random RANDOM = new Random();
+
     public Payment doPayment(Payment payment) throws JsonProcessingException {
         payment.setPaymentStatus(paymentProcessing());
         payment.setTransactionId(UUID.randomUUID().toString());
         log.info("PaymentService Request : {}", new ObjectMapper().writeValueAsString(payment));
-        return repository.save(payment);
+        Payment savedPayment = repository.save(payment);
+        return savedPayment;
     }
 
     public String paymentProcessing() {
         // api should be 3rd party payment gateway (like paypal may be)
-        return new Random().nextBoolean() ? "success" : "false";
+        return RANDOM.nextBoolean() ? "success" : "false";
     }
 
     public Payment findPaymentHistoryByOrderId(int orderId) throws JsonProcessingException {
