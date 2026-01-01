@@ -4,10 +4,10 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.example.security_service.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.security_service.entity.RefreshToken;
 import com.example.security_service.repository.RefreshTokenRepository;
 import com.example.security_service.repository.UserRepository;
 
@@ -22,12 +22,17 @@ public class RefreshTokenService {
     private UserRepository userRepository;
 
     public RefreshToken createRefreshToken(String username) {
+        User user = userRepository.findByUsername(username).get();
+
+        Optional<RefreshToken> existingToken =
+                refreshTokenRepository.findByUser(user);
+
         try{
-            RefreshToken refreshToken = RefreshToken.builder()
-                    .user(userRepository.findByUsername(username).get())
-                    .token(UUID.randomUUID().toString())
-                    .expiryDate(java.time.Instant.now().plusMillis(6000000)) // 100 minutes
-                    .build();
+            RefreshToken refreshToken = existingToken.orElse(RefreshToken.builder()
+                    .user(user) // 100 minutes
+                    .build());
+            refreshToken.setToken(UUID.randomUUID().toString());
+            refreshToken.setExpiryDate(java.time.Instant.now().plusMillis(6000000));
             System.out.println("Refresh token inside RefreshTokenService: " + refreshToken.getToken());
             return refreshTokenRepository.save(refreshToken);
         } catch (Exception e) {

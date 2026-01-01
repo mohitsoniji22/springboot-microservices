@@ -1,3 +1,6 @@
+server:
+  port: 8080
+
 spring:
   application:
     name: cloud-gateway
@@ -6,30 +9,32 @@ spring:
       routes:
         - id: order-service
           uri: lb://ORDER-SERVICE
+          #uri: http://localhost:9192
           predicates:
             - Path=/order/**
           filters:
             - AuthenticationFilter
         - id: payment-service
           uri: lb://PAYMENT-SERVICE
+          #uri: http://localhost:9191
           predicates:
             - Path=/payment/**
           filters:
             - AuthenticationFilter
         - id: security-service
           uri: lb://SECURITY-SERVICE
+          #uri: http://localhost:8089
           predicates:
             - Path=/auth/**
 
-server:
-  port: 8080
-
-#Expose all actuator endpoints
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health
+  endpoint:
+    health:
+      show-details: always
 
 hystrix:
   command:
@@ -38,3 +43,7 @@ hystrix:
         isolation:
           thread:
             timeoutInMilliseconds: 5000
+
+logging:
+  file:
+    name: logs/microservices.log

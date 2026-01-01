@@ -1,40 +1,9 @@
-# ===================================================
-# COMMON CONFIG (applies to all profiles)
-# ===================================================
-spring:
-  application:
-    name: order-service
-
 server:
   port: 9192
 
-# ===================================================
-# DEFAULT / PROD PROFILE
-# ===================================================
----
 spring:
-  config:
-    activate:
-      on-profile: default
-
-  cloud:
-    config:
-      uri: http://config-server:9196
-
-# ===================================================
-# TEST PROFILE
-# ===================================================
----
-spring:
-  config:
-    activate:
-      on-profile: test
-
-  cloud:
-    config:
-      enabled: false
-      #import-check:
-      #  enabled: false
+  application:
+    name: order-service
 
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -54,12 +23,14 @@ spring:
     console:
       enabled: true
 
-# external service dummy values (NOT under spring)
-microservices:
-  payment-service:
-    endpoints:
-      endpoint:
-        url: http://payment-service:9191/payments
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   file:
