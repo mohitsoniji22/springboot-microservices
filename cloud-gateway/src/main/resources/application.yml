@@ -6,27 +6,47 @@ spring:
     name: cloud-gateway
   cloud:
     gateway:
+      # -------------------------
+      # Global Filters for all routes
+      # -------------------------
+      default-filters:
+        - AuthenticationFilter
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 10
+            redis-rate-limiter.burstCapacity: 20
       routes:
         - id: order-service
           uri: lb://ORDER-SERVICE
-          #uri: http://localhost:9192
           predicates:
             - Path=/order/**
           filters:
-            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCB
+                fallbackUri: forward:/fallback/order
         - id: payment-service
           uri: lb://PAYMENT-SERVICE
-          #uri: http://localhost:9191
           predicates:
             - Path=/payment/**
           filters:
-            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: paymentServiceCB
+                fallbackUri: forward:/fallback/payment
         - id: security-service
           uri: lb://SECURITY-SERVICE
-          #uri: http://localhost:8089
           predicates:
             - Path=/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: securityServiceCB
+                fallbackUri: forward:/fallback/security
 
+# -------------------------
+# Management / Actuator
+# -------------------------
 management:
   endpoints:
     web:
@@ -36,14 +56,36 @@ management:
     health:
       show-details: always
 
-hystrix:
-  command:
-    fallbackcmd:
-      execution:
-        isolation:
-          thread:
-            timeoutInMilliseconds: 5000
+# -------------------------
+# Resilience4J
+# -------------------------
+resilience4j:
+  circuitbreaker:
+    instances:
+      orderServiceCB:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10s
 
+      paymentServiceCB:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10s
+
+      securityServiceCB:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10s
+
+
+# -------------------------
+# Logging
+# -------------------------
 logging:
   file:
     name: logs/microservices.log
+  level:
+    org.springframework.cloud.gateway: DEBUG  # Optional: debug gateway routing
