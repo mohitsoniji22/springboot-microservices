@@ -4,6 +4,9 @@ import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.example.security_service.exception.*;
+import lombok.extern.slf4j.*;
+import org.apache.hc.client5.http.auth.*;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -13,6 +16,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+@Slf4j
 @Service
 public class JwtService {
 
