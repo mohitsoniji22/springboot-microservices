@@ -1,6 +1,6 @@
-package ctc.lmp.microservices.translation.dto;
+package com.example.security_service.exception;
 
-import java.time.Instant;
+import java.time.*;
 
 public record ErrorResponse(
         Instant timestamp,

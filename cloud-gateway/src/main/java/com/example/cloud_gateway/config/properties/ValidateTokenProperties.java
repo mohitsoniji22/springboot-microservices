@@ -1,4 +1,4 @@
-package com.example.cloud_gateway.properties;
+package com.example.cloud_gateway.config.properties;
 
 import lombok.Getter;
 import lombok.Setter;
