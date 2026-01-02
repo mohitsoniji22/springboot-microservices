@@ -1,14 +1,10 @@
 package com.example.os.api.service;
 
 import lombok.extern.slf4j.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import com.example.os.api.common.Payment;
 import com.example.os.api.common.TransactionRequest;
@@ -17,6 +13,7 @@ import com.example.os.api.entity.Order;
 import com.example.os.api.repository.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.reactive.function.client.*;
 
 @Slf4j
 @Service
@@ -27,29 +24,44 @@ public class OrderService {
     private OrderRepository repository;
 
     @Autowired
-    @Lazy
-    private RestTemplate template;
+    private WebClient.Builder webClientBuilder;
 
     @Value("${microservices.payment-service.endpoints.endpoint.url}")
     private String ENDPOINT_URL;
 
     public TransactionResponse saveOrder(TransactionRequest request) throws JsonProcessingException {
-        String response = "";
 
         Order order = request.getOrder();
         Payment payment = request.getPayment();
+
         payment.setOrderId(order.getId());
         payment.setAmount(order.getPrice());
 
-        log.info("OrderService Request : {}", new ObjectMapper().writeValueAsString(request));
-        // rest call
-        Payment paymentResponse = template.postForObject(ENDPOINT_URL, payment, Payment.class);
+        log.info("OrderService Request : {}",
+                new ObjectMapper().writeValueAsString(request));
 
-        log.info("PaymentService Response from OrderService Rest call : {}", new ObjectMapper().writeValueAsString(paymentResponse));
+        Payment paymentResponse = webClientBuilder.build()
+                .post()
+                .uri(ENDPOINT_URL)
+                .bodyValue(payment)
+                .retrieve()
+                .bodyToMono(Payment.class)
+                .block(); //
 
-        response = paymentResponse.getPaymentStatus().equals("success") ? "payment processing successful and order placed" : "there is a failure in payment api , order added to cart";
+        log.info("PaymentService Response from OrderService : {}",
+                new ObjectMapper().writeValueAsString(paymentResponse));
+
+        String response = paymentResponse.getPaymentStatus().equalsIgnoreCase("success")
+                ? "payment processing successful and order placed"
+                : "there is a failure in payment api , order added to cart";
 
         repository.save(order);
-        return new TransactionResponse(order, paymentResponse.getAmount(), paymentResponse.getTransactionId(), response);
+
+        return new TransactionResponse(
+                order,
+                paymentResponse.getAmount(),
+                paymentResponse.getTransactionId(),
+                response
+        );
     }
 }
