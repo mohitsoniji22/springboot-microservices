@@ -1,7 +1,6 @@
 package com.example.ps.api.service;
 
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 import lombok.extern.slf4j.*;
 import org.slf4j.Logger;
@@ -36,10 +35,10 @@ public class PaymentService {
         return RANDOM.nextBoolean() ? "success" : "false";
     }
 
-    public Payment findPaymentHistoryByOrderId(int orderId) throws JsonProcessingException {
-        Payment payment = repository.findByOrderId(orderId);
-        log.info("PaymentService findPaymentHistoryByOrderId : {}", new ObjectMapper().writeValueAsString(payment));
-        return payment;
+    public List<Payment> findPaymentHistoryByOrderId(int orderId) throws JsonProcessingException {
+        List<Payment> payments = repository.findByOrderId(orderId);
+        log.info("PaymentService findPaymentHistoryByOrderId : {}", new ObjectMapper().writeValueAsString(payments));
+        return payments;
     }
 
 }

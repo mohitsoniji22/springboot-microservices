@@ -6,21 +6,17 @@ spring:
     name: cloud-gateway
   cloud:
     gateway:
-      # -------------------------
-      # Global Filters for all routes
-      # -------------------------
-      default-filters:
-        - AuthenticationFilter
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: 10
-            redis-rate-limiter.burstCapacity: 20
       routes:
         - id: order-service
           uri: lb://ORDER-SERVICE
           predicates:
             - Path=/order/**
           filters:
+            - AuthenticationFilter
+#            - name: RequestRateLimiter
+#              args:
+#                redis-rate-limiter.replenishRate: 10
+#                redis-rate-limiter.burstCapacity: 20
             - name: CircuitBreaker
               args:
                 name: orderServiceCB
@@ -30,6 +26,11 @@ spring:
           predicates:
             - Path=/payment/**
           filters:
+            - AuthenticationFilter
+#            - name: RequestRateLimiter
+#              args:
+#                redis-rate-limiter.replenishRate: 10
+#                redis-rate-limiter.burstCapacity: 20
             - name: CircuitBreaker
               args:
                 name: paymentServiceCB

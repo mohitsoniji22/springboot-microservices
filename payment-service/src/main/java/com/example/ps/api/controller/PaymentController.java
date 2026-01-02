@@ -12,6 +12,8 @@ import com.example.ps.api.entity.Payment;
 import com.example.ps.api.service.PaymentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.util.*;
+
 @RestController
 @RequestMapping("/payment")
 public class PaymentController {
@@ -25,7 +27,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{orderId}")
-    public Payment findPaymentHistoryByOrderId(@PathVariable int orderId) throws JsonProcessingException {
+    public List<Payment> findPaymentHistoryByOrderId(@PathVariable int orderId) throws JsonProcessingException {
         return service.findPaymentHistoryByOrderId(orderId);
     }
 }

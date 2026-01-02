@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.ps.api.entity.Payment;
 
+import java.util.*;
+
 public interface PaymentRepository extends JpaRepository<Payment, Integer> {
-    Payment findByOrderId(int orderId);
+    List<Payment> findByOrderId(int orderId);
 }

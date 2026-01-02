@@ -22,7 +22,8 @@ import java.util.HashMap;
 
 @Slf4j
 @Component
-public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
+public class AuthenticationFilter
+        extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
     @Autowired
     private RouteValidator validator;
@@ -46,11 +47,15 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                 return chain.filter(exchange);
             }
 
-            String authHeader = exchange.getRequest()
-                    .getHeaders()
-                    .getFirst(HttpHeaders.AUTHORIZATION);
+            String method = exchange.getRequest().getMethod() != null ? exchange.getRequest().getMethod().name() : "UNKNOWN";
+
+            String authHeader =
+                    exchange.getRequest()
+                            .getHeaders()
+                            .getFirst(HttpHeaders.AUTHORIZATION);
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                log.warn("Missing or malformed Authorization header for request {} {}", method, exchange.getRequest().getURI().getPath());
                 return unauthorized(exchange, "Missing Authorization header");
             }
 
@@ -79,23 +84,34 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                         }
 
                         if (response.statusCode() == HttpStatus.UNAUTHORIZED) {
+                            log.warn("Security service returned 401 for request {} {}", method, exchange.getRequest().getURI().getPath());
                             return unauthorized(exchange, "Invalid or expired token");
                         }
 
                         if (response.statusCode().is5xxServerError()) {
-                            return serviceUnavailable(exchange, "Security service unavailable");
+                            // Log and return deterministic fallback response from filter
+                            log.warn("Security service returned {} for request {} {} -> returning fallback response",
+                                    response.statusCode(), method, exchange.getRequest().getURI().getPath());
+
+                            return fallbackResponse(exchange, "security-service", "Security Service is currently unavailable");
                         }
 
+                        log.warn("Security service returned {} for request {} {} -> treating as unauthorized",
+                                response.statusCode(), method, exchange.getRequest().getURI().getPath());
                         return unauthorized(exchange, "Unauthorized access");
                     })
                     .onErrorResume(ex -> {
-                        log.error("Security service call failed", ex);
-                        return serviceUnavailable(exchange, "Authentication service unreachable");
+                        log.error("Security service call failed for request {} {}. Returning fallback response. Error: {}",
+                                method, exchange.getRequest().getURI().getPath(), ex.toString());
+                        // Return deterministic fallback response
+                        return fallbackResponse(exchange, "security-service", "Security Service is currently unavailable");
                     });
         };
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
+        String method = exchange.getRequest().getMethod() != null ? exchange.getRequest().getMethod().name() : "UNKNOWN";
+        log.info("Returning 401 Unauthorized for request {} {}: {}", method, exchange.getRequest().getURI().getPath(), message);
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
@@ -118,18 +134,19 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                         .wrap(bytes)));
     }
 
-    private Mono<Void> serviceUnavailable(ServerWebExchange exchange, String message) {
+    private Mono<Void> fallbackResponse(ServerWebExchange exchange, String serviceName, String message) {
         if (exchange.getResponse().isCommitted()) {
             return Mono.empty();
         }
 
         exchange.getResponse().setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        exchange.getResponse().getHeaders().add("X-Fallback-Invoked", "true");
 
         Map<String, Object> body = Map.of(
-                "status", 503,
-                "error", "Service Unavailable",
-                "message", message
+                "message", message,
+                "service", serviceName,
+                "status", 503
         );
 
         byte[] bytes;
