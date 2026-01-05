@@ -5,6 +5,8 @@ server:
 spring:
   application:
     name: order-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:9196}
 
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -33,6 +35,13 @@ management:
     health:
       show-details: always
 
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+
+# -------------------------
+# Logging
+# -------------------------
 logging:
   file:
-    name: logs/microservices.log
+    path: ./logs

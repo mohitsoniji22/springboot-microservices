@@ -5,9 +5,11 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
-      - "9300:9300"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
     networks:
       - internal
 
@@ -20,6 +22,26 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
       - "5601:5601"
+    networks:
+      - internal
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.2
+    container_name: filebeat
+    user: root
+    networks:
+      - internal
+    volumes:
+      - ./logs:/logs
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+    depends_on:
+      - elasticsearch
+
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
     networks:
       - internal
 
@@ -139,6 +161,7 @@ services:
 
 volumes:
   mysql_data:
+  esdata:
 
 networks:
   internal:

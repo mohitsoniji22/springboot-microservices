@@ -1,6 +1,8 @@
 spring:
   application:
     name: security-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:9196}
 
 management:
   endpoints:
@@ -10,7 +12,13 @@ management:
   endpoint:
     health:
       show-details: always
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
 
+# -------------------------
+# Logging
+# -------------------------
 logging:
   file:
-    name: logs/microservices.log
+    path: ./logs

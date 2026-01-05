@@ -35,7 +35,16 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
-    implementation 'org.springframework.cloud:spring-cloud-starter-bootstrap'
+
+    // Micrometer Tracing (replacement of Sleuth)
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+
+    // Zipkin reporter
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
+    //ELK Dependencies
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
