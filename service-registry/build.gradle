@@ -24,7 +24,17 @@ ext {
 
 dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
+    // Actuator (required for tracing)
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Micrometer Tracing (replacement of Sleuth)
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+
+    //ELK Dependencies
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    // Zipkin reporter
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
