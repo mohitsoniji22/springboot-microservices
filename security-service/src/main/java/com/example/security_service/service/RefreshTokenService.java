@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.example.security_service.entity.*;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import com.example.security_service.repository.RefreshTokenRepository;
 import com.example.security_service.repository.UserRepository;
 
 
+@Slf4j
 @Service
 public class RefreshTokenService {
 
@@ -33,7 +36,7 @@ public class RefreshTokenService {
                     .build());
             refreshToken.setToken(UUID.randomUUID().toString());
             refreshToken.setExpiryDate(java.time.Instant.now().plusMillis(6000000));
-            System.out.println("Refresh token inside RefreshTokenService: " + refreshToken.getToken());
+            log.info("Refresh token {} created for user {}", refreshToken.getToken(), username);
             return refreshTokenRepository.save(refreshToken);
         } catch (Exception e) {
             throw new RuntimeException("Token expired");
@@ -47,6 +50,7 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken token) {
         if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
             refreshTokenRepository.delete(token);
+            log.info("Refresh token {} expired", token.getToken());
             throw new RuntimeException(token.getToken() + " Refresh token was expired. Please make a new signin request");
         }
         return token;

@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.*;
+
 @Entity
 @Table(name = "PAYMENT_TB")
 @Data
@@ -17,10 +19,10 @@ public class Payment {
 
     @Id
     @GeneratedValue
-    private int paymentId;
+    private Long paymentId;
     private String paymentStatus;
     private String transactionId;
-    private int orderId;
-    private int amount;
+    private Long orderId;
+    private BigDecimal amount;
 
 }

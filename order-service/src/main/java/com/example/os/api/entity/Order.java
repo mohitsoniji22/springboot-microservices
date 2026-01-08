@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.*;
+
 @Entity
 @Table(name = "ORDER_TB")
 @Data
@@ -15,9 +17,9 @@ import lombok.NoArgsConstructor;
 public class Order {
 
     @Id
-    private int id;
-    private String name;
+    private Long id;
     private int qty;
-    private double price;
+    private BigDecimal amount;
+    private String status;
 
 }

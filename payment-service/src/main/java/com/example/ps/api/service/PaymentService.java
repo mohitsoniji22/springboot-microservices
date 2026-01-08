@@ -18,26 +18,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class PaymentService {
 
     @Autowired
-    private PaymentRepository repository;
+    private PaymentRepository paymentRepository;
 
     private static final Random RANDOM = new Random();
 
     public Payment doPayment(Payment payment) throws JsonProcessingException {
+        log.debug("PaymentService request received: {}", new ObjectMapper().writeValueAsString(payment));
         payment.setPaymentStatus(paymentProcessing());
         payment.setTransactionId(UUID.randomUUID().toString());
-        log.info("PaymentService Request : {}", new ObjectMapper().writeValueAsString(payment));
-        Payment savedPayment = repository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+        log.info("Payment saved: {}", new ObjectMapper().writeValueAsString(savedPayment));
         return savedPayment;
     }
 
     public String paymentProcessing() {
         // api should be 3rd party payment gateway (like paypal may be)
-        return RANDOM.nextBoolean() ? "success" : "false";
+        return RANDOM.nextBoolean() ? "success" : "failed";
     }
 
     public List<Payment> findPaymentHistoryByOrderId(int orderId) throws JsonProcessingException {
-        List<Payment> payments = repository.findByOrderId(orderId);
-        log.info("PaymentService findPaymentHistoryByOrderId : {}", new ObjectMapper().writeValueAsString(payments));
+        List<Payment> payments = paymentRepository.findByOrderId(orderId);
+        log.debug("findPaymentHistoryByOrderId : {}", new ObjectMapper().writeValueAsString(payments));
         return payments;
     }
 
