@@ -6,6 +6,6 @@ import com.example.ps.api.entity.Payment;
 
 import java.util.*;
 
-public interface PaymentRepository extends JpaRepository<Payment, Integer> {
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByOrderId(int orderId);
 }
