@@ -22,6 +22,6 @@ public class EmailNotificationService {
         mail.setText(message.getBody());
 
         mailSender.send(mail);
-        log.info("Email sent to user {}", message.getUserId());
+        log.info("Email sent to user {}", message.getUsername());
     }
 }

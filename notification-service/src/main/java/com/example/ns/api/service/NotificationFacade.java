@@ -15,7 +15,8 @@ public class NotificationFacade {
 
     public void handlePaymentSuccess(PaymentSuccessEvent event) {
         NotificationMessage message = NotificationMessage.builder()
-                .userId(event.getUserId())
+                .username(event.getUsername())
+                .email(event.getEmail())
                 .subject("Payment Successful")
                 .body("Your payment of ₹" + event.getAmount() +
                         " for order " + event.getOrderId() + " was successful.")
@@ -27,7 +28,7 @@ public class NotificationFacade {
 
     public void handlePaymentFailure(PaymentFailedEvent event) {
         NotificationMessage message = NotificationMessage.builder()
-                .userId(event.getUserId())
+                .username(event.getUsername())
                 .email(event.getEmail())
                 .subject("Payment Failed")
                 .body("Payment failed for order " + event.getOrderId()

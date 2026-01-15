@@ -4,9 +4,12 @@ import java.security.Key;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.example.security_service.entity.*;
 import com.example.security_service.exception.*;
+import com.example.security_service.repository.*;
 import lombok.extern.slf4j.*;
 import org.apache.hc.client5.http.auth.*;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
@@ -20,18 +23,24 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
-    public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
+    @Value("${jwt.secret}")
+    private String secret;
+
+    private final UserRepository userRepository;
+
+    public JwtService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public void validateToken(final String token) {
         Jwts.parserBuilder().setSigningKey(getSignKey()).build().parse(token);
     }
 
     public String generateToken(String username) {
+        User user = userRepository.findByUsername(username).get();
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, username);
-    }
-
-    public String createToken(Map<String, Object> claims, String username) {
+        claims.put("email", user.getEmail());
+        claims.put("userId", user.getUserId());
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
@@ -42,7 +51,7 @@ public class JwtService {
     }
 
     private Key getSignKey() {
-        byte[] apiKeySecretBytes = Decoders.BASE64.decode(SECRET);
+        byte[] apiKeySecretBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(apiKeySecretBytes);
     }
 

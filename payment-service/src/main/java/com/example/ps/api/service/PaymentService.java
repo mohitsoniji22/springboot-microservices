@@ -2,6 +2,7 @@ package com.example.ps.api.service;
 
 import java.util.*;
 
+import com.example.ps.api.dto.*;
 import lombok.extern.slf4j.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +32,9 @@ public class PaymentService {
         return savedPayment;
     }
 
-    public String paymentProcessing() {
+    public Status paymentProcessing() {
         // api should be 3rd party payment gateway (like paypal may be)
-        return RANDOM.nextBoolean() ? "success" : "failed";
+        return RANDOM.nextBoolean() ? Status.SUCCESS : Status.FAILURE;
     }
 
     public List<Payment> findPaymentHistoryByOrderId(int orderId) throws JsonProcessingException {

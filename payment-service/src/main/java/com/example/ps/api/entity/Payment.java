@@ -1,9 +1,7 @@
 package com.example.ps.api.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.example.ps.api.dto.*;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,11 +16,16 @@ import java.math.*;
 public class Payment {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
-    private String paymentStatus;
+
+    @Enumerated(EnumType.STRING)
+    private Status paymentStatus;
+
     private String transactionId;
+
     private Long orderId;
+
     private BigDecimal amount;
 
 }

@@ -1,10 +1,10 @@
-package com.example.ns.api.event;
+package com.example.os.api.event;
 
-import com.example.ns.api.domain.*;
-import com.fasterxml.jackson.annotation.*;
+import com.example.os.api.dto.EventType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 
-import java.math.*;
+import java.math.BigDecimal;
 
 @Getter
 @Setter

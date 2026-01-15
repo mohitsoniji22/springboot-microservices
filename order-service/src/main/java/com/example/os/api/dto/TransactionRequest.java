@@ -1,6 +1,6 @@
 package com.example.os.api.dto;
 
-import com.example.os.api.entity.Order;
+import java.math.*;
 
-public record TransactionRequest(Order order, Payment payment) {
+public record TransactionRequest(String name, int quantity, BigDecimal amount) {
 }

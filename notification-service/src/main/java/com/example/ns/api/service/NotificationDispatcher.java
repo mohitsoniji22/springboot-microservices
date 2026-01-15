@@ -16,6 +16,6 @@ public class NotificationDispatcher {
         if (message.getType() == NotificationType.EMAIL) {
             emailService.send(message);
         }
-        log.info("Notification dispatched to user {}", message.getUserId());
+        log.info("Notification dispatched to user {}", message.getUsername());
     }
 }

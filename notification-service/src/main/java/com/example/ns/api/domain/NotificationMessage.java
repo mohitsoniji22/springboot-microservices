@@ -6,7 +6,7 @@ import lombok.*;
 @Builder
 public class NotificationMessage {
 
-    private String userId;
+    private String username;
     private String email;
     private String subject;
     private String body;
