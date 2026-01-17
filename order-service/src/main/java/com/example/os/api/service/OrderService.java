@@ -9,6 +9,7 @@ import lombok.extern.slf4j.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpHeaders;
 
 import com.example.os.api.entity.Order;
 import com.example.os.api.repository.OrderRepository;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.transaction.annotation.*;
 import org.springframework.web.reactive.function.client.*;
 
+import java.net.http.*;
 import java.time.*;
 
 @Slf4j
@@ -89,6 +91,8 @@ public class OrderService {
         Payment paymentResponse = webClientBuilder.build()
                 .post()
                 .uri(ENDPOINT_URL)
+                .header(HttpHeaders.AUTHORIZATION,
+                        "Bearer " + jwtUtil.getToken())
                 .bodyValue(payment)
                 .retrieve()
                 .bodyToMono(Payment.class)

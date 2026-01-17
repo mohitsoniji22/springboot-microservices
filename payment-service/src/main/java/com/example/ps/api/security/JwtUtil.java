@@ -1,15 +1,11 @@
-package com.example.os.api.security;
+package com.example.ps.api.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.*;
 import io.jsonwebtoken.security.*;
-import lombok.*;
-import org.springframework.security.core.*;
+import org.springframework.beans.factory.annotation.*;
 import org.springframework.security.core.context.*;
 import org.springframework.stereotype.*;
-import org.springframework.beans.factory.annotation.Value;
-
-import java.nio.charset.*;
 
 @Component
 public class JwtUtil {
@@ -41,9 +37,5 @@ public class JwtUtil {
 
     public CurrentUser getCurrentUser() {
         return (CurrentUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    }
-
-    public String getToken() {
-        return SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
     }
 }

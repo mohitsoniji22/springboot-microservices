@@ -1,4 +1,4 @@
-package com.example.os.api.security;
+package com.example.ps.api.security;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
@@ -6,7 +6,6 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.context.*;
 import org.springframework.stereotype.*;
 import org.springframework.web.filter.*;
-import com.example.os.api.security.CurrentUser;
 
 import java.io.*;
 import java.util.*;
@@ -40,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(
-                                currentUser, token, List.of());
+                                currentUser, null, List.of());
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
