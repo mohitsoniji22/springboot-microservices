@@ -29,13 +29,15 @@ services:
     image: docker.elastic.co/beats/filebeat:8.12.2
     container_name: filebeat
     user: root
+    command: [ "--strict.perms=false" ]
+    depends_on:
+      - elasticsearch
+      - kibana
     networks:
       - internal
     volumes:
-      - ./logs:/logs
-      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-    depends_on:
-      - elasticsearch
+      - ./logs:/logs:ro
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
 
   zipkin:
     image: openzipkin/zipkin
@@ -45,6 +47,75 @@ services:
     networks:
       - internal
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - internal
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9093"
+    networks:
+      - internal
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093,PLAINTEXT_INTERNAL://:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,PLAINTEXT_INTERNAL://kafka:29093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9093" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    depends_on:
+      - kafka
+    ports:
+      - "9000:9000"
+    networks:
+      - internal
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:29093"
+      JVM_OPTS: "-Xms32M -Xmx64M"
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"     # exposes MySQL to localhost
+    environment:
+      MYSQL_ROOT_PASSWORD: Abc@12345
+      MYSQL_DATABASE: security_service_db
+    networks:
+      - internal
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      service-registry:
+        condition: service_healthy
+
   service-registry:
     build: ./service-registry
     image: service-registry
@@ -53,6 +124,10 @@ services:
       - "8761:8761"
     networks:
       - internal
+    environment:
+      ZIPKIN_SERVER_URL: http://zipkin:9411/api/v2/spans
+    volumes:
+      - ./logs/service-registry:/logs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
       interval: 10s
@@ -69,6 +144,9 @@ services:
       - internal
     environment:
       EUREKA_URL: http://service-registry:8761/eureka/
+      ZIPKIN_SERVER_URL: http://zipkin:9411/api/v2/spans
+    volumes:
+      - ./logs/config-server:/logs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9196/actuator/health" ]
       interval: 10s
@@ -88,6 +166,9 @@ services:
       - internal
     environment:
       CONFIG_SERVER_URL: http://config-server:9196
+      ZIPKIN_SERVER_URL: http://zipkin:9411/api/v2/spans
+    volumes:
+      - ./logs/cloud-gateway:/logs
     depends_on:
       config-server:
         condition: service_healthy
@@ -102,7 +183,10 @@ services:
       - internal
     environment:
       CONFIG_SERVER_URL: http://config-server:9196
-      DB_URL: jdbc:mysql://mysql:3306/microservices
+      DB_URL: jdbc:mysql://mysql:3306/security_service_db
+      ZIPKIN_SERVER_URL: http://zipkin:9411/api/v2/spans
+    volumes:
+      - ./logs/security-service:/logs
     depends_on:
       config-server:
         condition: service_healthy
@@ -119,7 +203,13 @@ services:
       - internal
     environment:
       CONFIG_SERVER_URL: http://config-server:9196
+      KAFKA_BOOTSTRAP_SERVER: kafka:9093
+      ZIPKIN_SERVER_URL: http://zipkin:9411/api/v2/spans
+    volumes:
+      - ./logs/order-service:/logs
     depends_on:
+      kafka:
+        condition: service_healthy
       config-server:
         condition: service_healthy
 
@@ -133,30 +223,31 @@ services:
       - internal
     environment:
       CONFIG_SERVER_URL: http://config-server:9196
+      ZIPKIN_SERVER_URL: http://zipkin:9411/api/v2/spans
+    volumes:
+      - ./logs/payment-service:/logs
     depends_on:
       config-server:
         condition: service_healthy
 
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
-    restart: always
+  notification-service:
+    build: ./notification-service
+    image: notification-service
+    container_name: notification-service
     ports:
-      - "3306:3306"     # exposes MySQL to localhost
-    environment:
-      MYSQL_ROOT_PASSWORD: Abc@12345
-      MYSQL_DATABASE: microservices
+      - "9193:9193"
     networks:
       - internal
+    environment:
+      CONFIG_SERVER_URL: http://config-server:9196
+      KAFKA_BOOTSTRAP_SERVER: kafka:9093
+      ZIPKIN_SERVER_URL: http://zipkin:9411/api/v2/spans
     volumes:
-      - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./logs/notification-service:/logs
     depends_on:
-      service-registry:
+      kafka:
+        condition: service_healthy
+      config-server:
         condition: service_healthy
 
 volumes:

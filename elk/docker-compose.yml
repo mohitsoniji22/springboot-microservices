@@ -29,13 +29,15 @@ services:
     image: docker.elastic.co/beats/filebeat:8.12.2
     container_name: filebeat
     user: root
+    command: [ "--strict.perms=false" ]
+    depends_on:
+      - elasticsearch
+      - kibana
     networks:
       - internal
     volumes:
-      - ./logs:/logs
-      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-    depends_on:
-      - elasticsearch
+      - ./logs:/logs:ro
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
 
   zipkin:
     image: openzipkin/zipkin
@@ -69,10 +71,15 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093,PLAINTEXT_INTERNAL://:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9093,PLAINTEXT_INTERNAL://kafka:29093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9093,PLAINTEXT_INTERNAL://kafka:29093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "nc -z localhost 9093" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   kafdrop:
     image: obsidiandynamics/kafdrop
@@ -86,6 +93,28 @@ services:
     environment:
       KAFKA_BROKERCONNECT: "kafka:29093"
       JVM_OPTS: "-Xms32M -Xmx64M"
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"     # exposes MySQL to localhost
+    environment:
+      MYSQL_ROOT_PASSWORD: Abc@12345
+      MYSQL_DATABASE: security_service_db
+    networks:
+      - internal
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      service-registry:
+        condition: service_healthy
 
 
 volumes:
