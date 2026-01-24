@@ -1,144 +1,149 @@
-# Order Service Microservice
+# Microservices Architecture with Spring Boot
 
-The **Order Service** microservice is part of a distributed system that handles order management. It communicates with a payment service to process payments and manages the order lifecycle in the system.
+## Microservices Documentation
+
+- [Order Service]
+- [Payment Service]
+- [Eureka Service Registry]
+- [Cloud API Gateway]
+- [Cloud Config Server]
+- [Security Service]
+- [Notification Service]
 
 ## Overview
+This repository hosts a microservices architecture application designed to enhance inter-service communication using REST templates and Feign clients. The application is structured around several key technologies:
 
-This microservice allows users to:
-- Place an order and process payment.
-- Retrieve order details by order ID.
+- **Eureka Service Registry**: Facilitates the registration of applications for dynamic service discovery.
+- **API Gateway**: Routes requests and provides a single entry point to the system, securing endpoints through OAuth2.
+- **ELK Stack**: Enables centralized logging for monitoring and troubleshooting with Elasticsearch, Logstash, and Kibana.
+- **Spring Cloud Config Server**: Manages shared configurations across multiple microservice environments from a central place.
+- **Spring Security 6**: Implements robust security using JWT for authentication and authorization processes.
+- **Inter-Service Communication**: Utilizes web clients and Kafka for efficient communication between services.
 
-## Dependencies
+![Architecture](Architecture.jpg)
 
-This project utilizes several dependencies to function correctly. Key dependencies include:
+## Service Startup Order
+Ensure the services are started in the following order for proper registration and configuration:
+1. `SERVICE-REGISTRY`
+2. `CONFIG-SERVER`
+3. `GATEWAY-SERVICE`
+4. `SECURITY-SERVICE`
+5. `ORDER-SERVICE`
+6. `PAYMENT-SERVICE`
+7. `NOTIFICATION-SERVICE`
 
-- **`Spring Boot Starter Web`**: For building web applications, including RESTful services.
-- **`Spring Boot Starter Data JPA`**: For data persistence using Spring Data JPA and Hibernate.
-- **`Spring Boot Starter Eureka Client`**: For service discovery with Netflix Eureka.
-- **`Spring Cloud Config`**: For externalized configuration management in a microservices architecture.
-- **`H2 Database`**: An in-memory database for development and testing.
-- **`Lombok`**: For reducing boilerplate code by generating getters, setters, and constructors.
-- **`RestTemplate`**: For synchronous client-side HTTP access.
+## Running the microservices
+To run all microservices using Docker Compose, execute the following command in the terminal:
+```bash
+docker-compose up --build
+   ```
 
-Refer to the `pom.xml` file for all required dependencies.
+## Testing the Application
 
-## Configuration
-
-### Application Properties
-
-The application-specific properties are defined in `src/main/resources/application.properties`. Below are key configurations:
-
-```properties
-spring.application.name=order-service
-spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=
-
-```
-
-### YAML Configuration
-
-Additional configurations are defined in `src/main/resources/application.yml`:
-
-```yaml
-server:
-    port: 9192
-
-spring:
-    h2:
-        console:
-            enabled: true
-    application:
-        name: ORDER-SERVICE
-
-management:
-  health:
-    circuitbreakers:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: always
-
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      userService:
-        registerHealthIndicator: true
-        eventConsumerBufferSize: 10
-        failureRateThreshold: 50
-        minimumNumberOfCalls: 5
-        automaticTransitionFromOpenToHalfOpenEnabled: true
-        waitDurationInOpenState: 5s
-        permittedNumberOfCallsInHalfOpenState: 3
-        slidingWindowSize: 10
-        slidingWindowType: COUNT_BASED
-
-
-  retry:
-    instances:
-      userService:
-        maxRetryAttempts: 5
-        waitDuration: 10s
-
-logging:
-    file:
-        name: C:/Users/dharani.chrinta/Developer/Personal/springboot-microservices/logs/microservices.log
-```
-
-### Bootstrap Configuration
-
-For centralized configuration, the bootstrap settings are defined in `src/main/resources/bootstrap.yml`:
-
-```yaml
-spring:
-    cloud:
-        config:
-            uri: http://localhost:9196
-```
-
-## Endpoints
-
-### POST /order/bookOrder
-
-**Description:**  
-This endpoint allows users to book an order and process the payment.
-
-**Request Body:**  
-`TransactionRequest` object containing Order and Payment details.
-
-**Response:**  
-`TransactionResponse` containing order details, transaction ID, and a status message.
-
-**Example Request:**
-```json
-{
-  "order": {
-    "id": 1,
-    "name": "Sample Order",
-    "quantity": 2,
-    "price": 100.0
-  },
-  "payment": {
+### 1. Register Users
+- **Register user rakey**:
+  ```http
+  POST http://localhost:8080/auth/register
+  {
+      "username": "mohitsoniji22",
+      "password": "pwd2",
+      "email": "mohitsoniji22@gmail.com"
   }
+  ```
+- **Register user tarun**:
+  ```http
+  POST http://localhost:8080/auth/register
+  {
+    "username": "lavlavi",
+    "password": "pwd3",
+    "email": "lavlavi@gmail.com"
+  }
+  ```
+
+### 2. Get Token for Tarun
+- **Request**:
+  ```http
+  GET http://localhost:8080/auth/getToken
+  {
+      "username": "mohitsoniji22",
+      "password": "pwd2"
+  }
+- **Response**:
+  ```http
+  {
+    "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0YXJ1biIsImlhdCI6MTcyNTU2NDE0NiwiZXhwIjoxNzI1NTY1MzQ2fQ.Vqb63DMj5t2PIcdmEuweROc4sAFZOb2KYS7323ounNY",
+    "token": "60b2dcf2-dd14-4924-b8f5-d32d958c7048"
+  }
+  ```
+
+### 3. Validate Token
+- **Request**:
+  ```http
+  GET http://localhost:8080/auth/validateToken?token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0YXJ1biIsImlhdCI6MTcyNTU2NDE0NiwiZXhwIjoxNzI1NTY1MzQ2fQ.Vqb63DMj5t2PIcdmEuweROc4sAFZOb2KYS7323ounNY
+  ```
+
+- **Response**:
+  ``` http
+  {
+    "message": "Token is valid"
+  }
+  ```
+### 4. Create Book Order with Bearer Token
+- **Including Bearer Token**:
+  To include the Bearer Token in your request, go to the Headers tab of your API tool (like Postman), select 'Authorization', choose 'Bearer Token', and paste the JWT token received from the previous step.
+
+- **Request**:
+  ```http
+  POST http://localhost:8080/order/bookOrder
+  {
+    "name": "Laptop1",
+    "quantity": 3,
+    "amount": "100000"
+  }
+  ```
+- **Response**:
+  ```http
+  {
+    "order": {
+        "id": 2,
+        "qty": 3,
+        "productName": "Laptop1",
+        "amount": 100000,
+        "status": "SUCCESS",
+        "username": "mohitsoniji22",
+        "paymentId": 2,
+        "createdAt": "2026-01-23T07:12:06.117961928Z"
+    },
+    "transactionId": "d9217854-5169-4a14-8e22-762401e3224d",
+    "message": "payment processing successful and order placed 2"
 }
-```
+  ```
 
-### GET /order/getOrder/{orderId}
+### 5. Retrieve Payment Details with Bearer Token
+- **Including Bearer Token**:
+  To include the Bearer Token in your request, go to the Headers tab of your API tool (like Postman), select 'Authorization', choose 'Bearer Token', and paste the JWT token received from the previous steps.
 
-**Description:**  
-This endpoint fetches the details of a specific order by order ID.
+- **Request**:
+  ```http
+  GET http://localhost:8080/payment/2
+  ```
+- **Response**:
+  ```http
+  [
+    {
+        "paymentId": 2,
+        "paymentStatus": "SUCCESS",
+        "transactionId": "d9217854-5169-4a14-8e22-762401e3224d",
+        "orderId": 2,
+        "amount": 100000.00
+    }
+  ]
+  ```
 
-**Path Variable:**  
-`orderId` - The ID of the order to retrieve.
+## Note
+Tokens must be refreshed within their valid time frames; JWT tokens are valid for 20 minutes, and refresh tokens are valid for 100 minutes. If the refresh time is exceeded, the process must restart from user registration.
 
-**Response:**  
-`TransactionResponse` containing order details, transaction ID, and a status message.
+## Logging
+Once your services are running, you can monitor and view centralized logs in Kibana. Here's an example of how logs appear in the Kibana dashboard:
 
-
-
+![Logging](images/6.%20Logging.jpg)

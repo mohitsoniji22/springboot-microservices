@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: security-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:9196}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_SERVER_URL:http://localhost:9411/api/v2/spans}
+
+jwt:
+  secret: H0nq2q6uC6Z6j0k8m0Z1q5M8Xc4uP9mKZxA8yZPqkA0=
+
+# -------------------------
+# Logging
+# -------------------------
+logging:
+  file:
+    path: ./logs

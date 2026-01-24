@@ -1,0 +1,99 @@
+server:
+  port: 8080
+
+jwt:
+  secret: H0nq2q6uC6Z6j0k8m0Z1q5M8Xc4uP9mKZxA8yZPqkA0=
+
+spring:
+  application:
+    name: cloud-gateway
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:9196}
+  cloud:
+    gateway:
+      routes:
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order/**
+          filters:
+            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCB
+                fallbackUri: forward:/fallback/order
+        - id: payment-service
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path=/payment/**
+          filters:
+            - AuthenticationFilter
+            - name: CircuitBreaker
+              args:
+                name: paymentServiceCB
+                fallbackUri: forward:/fallback/payment
+        - id: security-service
+          uri: lb://SECURITY-SERVICE
+          predicates:
+            - Path=/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: securityServiceCB
+                fallbackUri: forward:/fallback/security
+
+# -------------------------
+# Management / Actuator
+# -------------------------
+management:
+  health:
+    redis:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health, circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0   # 100% traces (use 0.1 in prod)
+
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_SERVER_URL:http://localhost:9411/api/v2/spans}
+
+# -------------------------
+# Logging
+# -------------------------
+logging:
+  file:
+    path: ./logs
+
+# -------------------------
+# Resilience4J
+# -------------------------
+resilience4j:
+  circuitbreaker:
+    instances:
+      orderServiceCB:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10s
+
+      paymentServiceCB:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10s
+
+      securityServiceCB:
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        slidingWindowSize: 10
+        waitDurationInOpenState: 10s
+
+
+

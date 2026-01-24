@@ -1,0 +1,61 @@
+server:
+  port: 9193
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: notification-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:9196}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+    admin:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+    topics:
+      payment-success: payment.success.topic
+      payment-failed: payment.failed.topic
+    consumer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+      group-id: notification-group
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "*"
+        spring.json.use.type.headers: true
+        spring.json.type.mapping: |
+          com.example.os.api.event.PaymentFailedEvent:com.example.ns.api.event.PaymentFailedEvent,
+          com.example.os.api.event.PaymentSuccessEvent:com.example.ns.api.event.PaymentSuccessEvent
+    producer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: 
+    password: 
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_SERVER_URL:http://localhost:9411/api/v2/spans}
+
+# -------------------------
+# Logging
+# -------------------------
+logging:
+  file:
+    path: ./logs

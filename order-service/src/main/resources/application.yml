@@ -1,0 +1,65 @@
+server:
+  port: 9192
+
+spring:
+  application:
+    name: order-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:9196}
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+    admin:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+    topics:
+      payment-success: payment.success.topic
+      payment-failed: payment.failed.topic
+    producer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+    consumer:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVER:localhost:9093}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_SERVER_URL:http://localhost:9411/api/v2/spans}
+
+jwt:
+  secret: H0nq2q6uC6Z6j0k8m0Z1q5M8Xc4uP9mKZxA8yZPqkA0=
+
+# -------------------------
+# Logging
+# -------------------------
+logging:
+  file:
+    path: ./logs
